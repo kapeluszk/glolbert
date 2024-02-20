@@ -1,6 +1,7 @@
 package main
 
 import (
+	b "dcBot/bot"
 	"flag"
 	"fmt"
 	"github.com/bwmarrin/discordgo"
@@ -97,7 +98,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 					}
 				}
 			}
-			fmt.Println(nicknames)
+			b.ShuffleStrings(nicknames)
 			mid := len(nicknames) / 2
 			team1 := nicknames[:mid]
 			team2 := nicknames[mid:]
