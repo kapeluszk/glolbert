@@ -78,7 +78,10 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 					}
 				}
 			}
-			fmt.Println(users)
+			if len(users) < 2 {
+				_, _ = s.ChannelMessageSend(m.ChannelID, "zbyt mało użytkowników żeby stworzyć 2 drużyny!")
+				return
+			}
 			var nicknames []string
 			members, err := s.GuildMembers(guild.ID, "", 1000)
 			if err != nil {
