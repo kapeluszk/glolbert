@@ -97,7 +97,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 					}
 				}
 			}
-			fmt.Println(nicknames)
+
 			mid := len(nicknames) / 2
 			team1 := nicknames[:mid]
 			team2 := nicknames[mid:]
