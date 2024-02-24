@@ -9,8 +9,12 @@ import (
 	"os"
 	"os/signal"
 	"strings"
+	"sync"
 	"syscall"
 )
+
+var VoteCount = make(map[string]int)
+var ChanMap = make(map[string]chan bool)
 
 var (
 	BotToken = flag.String("token", "", "discord bot token")
@@ -112,6 +116,53 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			result := fmt.Sprintf("Wylosowałem drużyny!\n Drużyna 1: %s\n Drużyna 2: %s\n", res1, res2)
 
 			_, _ = s.ChannelMessageSend(m.ChannelID, result)
+		} else if command[0] == "!votekick" {
+			kicked := command[1]
+			fmt.Println(kicked)
+			var kickedID = ""
+
+			channel, err := s.State.Channel(m.ChannelID)
+			if err != nil {
+				log.Fatalf("Could not find channel: %v", err)
+				return
+			}
+			guild, err := s.State.Guild(channel.GuildID)
+			if err != nil {
+				log.Fatalf("Could not find guild: %v", err)
+				return
+			}
+
+			members, err := s.GuildMembers(guild.ID, "", 1000)
+
+			if err != nil {
+				log.Fatal(err)
+			}
+			for _, member := range members {
+				if kicked == member.Nick {
+					fmt.Printf("match!: %s", member.Nick)
+					kickedID = member.User.ID
+				} else if kicked == member.User.Username {
+					kickedID = member.User.ID
+				}
+			}
+			fmt.Println(kickedID)
+
+			var mutex = sync.Mutex{}
+
+			users := b.CurrentVcMembers(s, m)
+
+			voteThreshold := len(users) / 2
+
+			_, ok := ChanMap[kickedID]
+			if !ok {
+				ChanMap[kickedID] = make(chan bool)
+				go b.VotingHandler(ChanMap[kickedID], &mutex, kickedID, VoteCount, s, guild, ChanMap, m.ChannelID)
+			}
+			b.AddVote(kickedID, VoteCount, &mutex, voteThreshold, ChanMap, s, m.ChannelID)
+			fmt.Println(ChanMap)
+			fmt.Println(VoteCount[kickedID])
+		} else if command[0] == "!test" {
+
 		}
 	}
 }
